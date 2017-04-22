@@ -2,6 +2,7 @@
 
 ## What is this?
   eTAS is Digital Tachograph Analysis System
+  RC car version
   
 ## Motivation
   According to the dangerous driving behavior statistical data provided by the traffic safety analysis system of the TS, the correlation between dangerous driving and accident rate can be grasped when comparing the dangerous driving behaviors of the business vehicles with the accident rates of the business vehicles. Therefore, the goal is to design smartphone applications that provide results to the general driver. Through this, we want to derive the safe operation of the driver.
