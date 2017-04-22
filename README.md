@@ -1,4 +1,4 @@
-# eTAS (RC car version)
+# eTAS (RC Car)
 
 ## What is this?
   eTAS is Digital Tachograph Analysis System
