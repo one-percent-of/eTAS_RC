@@ -86,6 +86,8 @@ app.controller('MotionController', function($scope, $ionicPlatform, $cordovaDevi
     var accQueue = [];
     var speedQueue = [];
     var speedList = [];
+    var angularVel = [];
+    var angular1 = 0;
     const calTime = 6000;
     const secondCnt = (1000 / $scope.options.frequency);
 
@@ -99,6 +101,9 @@ app.controller('MotionController', function($scope, $ionicPlatform, $cordovaDevi
 
         for (var i = 0; i < MaxQueue; i++)
           compareQueue.push(0);
+
+        for (var i = 0; i < MaxQueue; i++)
+          angularVel.push(0);
 
         for (var i = 0; i < secondCnt; i++)
           speedQueue.push(0);
@@ -194,6 +199,15 @@ app.controller('MotionController', function($scope, $ionicPlatform, $cordovaDevi
             }
 
 
+            //angularVel calculate
+            angularVel.push(compareQueue[MaxQueue-1]-compareQueue[MaxQueue-2]);
+
+            angular1 = angularVel.slice(MaxQueue - Math.round(MaxQueue / 6)-1, MaxQueue-1).reduce(function(a, b) {
+                  return a + b;
+                });
+
+            angularVel.shift();
+
 
             //error calculate
             errorAngle3 = errorAngle6 = false;
@@ -266,6 +280,13 @@ app.controller('MotionController', function($scope, $ionicPlatform, $cordovaDevi
               }
             }
 
+            //급진로 변경
+            if(speed >= 30){
+              if(Math.abs(angularVel) >= 10){
+                
+              }
+            }
+
 
             rotationAng.push(sum3.toFixed(2));
             uturnAng.push(sum6.toFixed(2));
@@ -290,6 +311,7 @@ app.controller('MotionController', function($scope, $ionicPlatform, $cordovaDevi
           $scope.measurements.alertU = judgeCnt6;
           $scope.measurements.error3 = errorAngle3;
           $scope.measurements.error6 = errorAngle6;
+          $scope.measurements.test = angular1.toFixed(2);
 
 
 
