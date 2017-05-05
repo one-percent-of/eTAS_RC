@@ -280,10 +280,20 @@ app.controller('MotionController', function($scope, $ionicPlatform, $cordovaDevi
               }
             }
 
-            //급진로 변경
+            //급진로변경
             if(speed >= 30){
               if(Math.abs(angularVel) >= 10){
-                
+                if(acc <= 2) {
+
+                }
+              }
+            }
+            //급앞지르기
+            if(speed >= 30){
+              if(Math.abs(angularVel) >= 10){
+                if(acc >= 3){
+
+                }
               }
             }
 
