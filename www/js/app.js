@@ -296,6 +296,24 @@ app.controller('MotionController', function($scope, $ionicPlatform, $cordovaDevi
                 }
               }
             }
+            //과속
+            if(speed >= 30){
+            }
+            //장기과속
+            if(speed >= 30 && cnt - judgeTime6 > secondCnt*180){
+            }
+            //급가속
+            if(speed >= 6){
+                if(acc >= 8){
+
+                }
+            }
+            //급출발
+            if(speed <= 5){
+              if(acc >= 8){
+                
+              }
+            }
 
 
             rotationAng.push(sum3.toFixed(2));
