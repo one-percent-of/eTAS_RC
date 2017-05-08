@@ -314,6 +314,18 @@ app.controller('MotionController', function($scope, $ionicPlatform, $cordovaDevi
                 
               }
             }
+            //급감속
+            if(speed >= 6){
+                if(acc <= -8){
+
+                }
+            }
+            //급정지
+            if(speed <= 5){
+              if(acc <= -8){
+                
+              }
+            }
 
 
             rotationAng.push(sum3.toFixed(2));
