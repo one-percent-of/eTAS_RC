@@ -57,16 +57,23 @@
       <button class="button button-full button-positive" ng-click="stopWatching()">
 			  Stop Measurement
 			</button>
-      <h4>각속도: {{measurements.test}} </h4>
+      <h4>가속도: {{measurements.acc}} Km/h</h4>
       <h4>스피드: {{measurements.speed}} km/h</h4>
+      <h4>각속도: {{measurements.ang}} °</h4>
       <h4>cnt: {{measurements.cnt}}</h4>
-      <h4>급회전각: {{measurements.sum}}°</h4>
+      <h4>급가속: {{measurements.alertAcc}}회</h4>
+      <h4>급출발: {{measurements.alertStart}}회</h4>
+      <h4>급감속: {{measurements.alertDcc}}회</h4>
+      <h4>급정지: {{measurements.alertStop}}회</h4>
+      <h4>급진로변경: {{measurements.alertCC}}회</h4>
+      <h4>급앞지르기: {{measurements.alertCF}}회</h4>
+      <!--<h4>급회전각: {{measurements.sum}}°</h4>
       <h4>급유턴각: {{measurements.sumU}}°</h4>
       <h4>급회전에러: {{measurements.error3}}</h4>
       <h4>급유턴에러: {{measurements.error6}}</h4>
       <h4>급좌회전: {{measurements.alertL}}회</h4>
       <h4>급우회전: {{measurements.alertR}}회</h4>
-      <h4>급유턴: {{measurements.alertU}}회</h4>
+      <h4>급유턴: {{measurements.alertU}}회</h4>-->
     </ion-content>
   </ion-pane>
 
