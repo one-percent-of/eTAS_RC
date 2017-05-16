@@ -73,6 +73,8 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
       judgeTime6 = 0,
       judgeTimeAcc = 0,
       judgeTimeDcc = 0,
+      judgeTimeStart = 0,
+      judgeTimeStop = 0,
       judgeCnt3L = 0,
       judgeCnt3R = 0,
       judgeCnt6 = 0,
@@ -167,17 +169,21 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
 
 
             //acc calculate
-            if (!!accQueue[1]) {
-              acc = (accQueue[1] - accQueue[0]) * (3600 / 1000);
+            if (!!accQueue[9]) {
+              acc = (accQueue[9] - accQueue[0]) * (3600 / 1000);
               accList.push(acc.toFixed(2));
               speedQueue.push(acc);
               accQueue.shift();
+              obj.accVel = Math.round(acc);
+              obj.$save().then(function (ref) {
+                ref.key() === obj.$id; // true
+              }, function (error) {
+                console.log("Error:", error);
+              });
             }
 
             //speed calculate
-            let sum = (speedQueue.reduce(function (a, b) {
-              return a + b;
-            }) / secondCnt);
+            let sum = acc / secondCnt;
             speed += sum;
             if (speed < 0)
               speed = 0;
@@ -297,11 +303,22 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
               judgeCntAcc++;
               judgeTimeAcc = cnt;
               obj.acc = judgeCntAcc;
+              obj.$save().then(function (ref) {
+                ref.key() === obj.$id; // true
+              }, function (error) {
+                console.log("Error:", error);
+              });
             }
             //급출발
-            if (speed <= 5 && acc >= 8) {
+            if (cnt - judgeTimeStart > MaxQueue/3 && speed <= 5 && acc >= 8) {
               judgeCntStart++;
+              judgeTimeStart = cnt;
               obj.start = judgeCntStart;
+              obj.$save().then(function (ref) {
+                ref.key() === obj.$id; // true
+              }, function (error) {
+                console.log("Error:", error);
+              });
             }
 
             //급감속
@@ -309,16 +326,29 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
               judgeCntDcc++;
               judgeTimeDcc = cnt;
               obj.dcc = judgeCntDcc;
+              obj.$save().then(function (ref) {
+                ref.key() === obj.$id; // true
+              }, function (error) {
+                console.log("Error:", error);
+              });
             }
 
             //급정지
-            if (speed <= 5 && acc <= -14) {
+            if (cnt - judgeTimeStop > MaxQueue/3 && speed <= 5 && acc <= -14) {
               judgeCntStop++;
+              judgeTimeStop = cnt;
               obj.stop = judgeCntStop;
+              obj.$save().then(function (ref) {
+                ref.key() === obj.$id; // true
+              }, function (error) {
+                console.log("Error:", error);
+              });
             }
 
             //급진로변경
-            if (speed >= 30)
+            if (speed >= 30) {
+
+            }
 
 
 
@@ -343,8 +373,8 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
           $scope.measurements.alertStart = judgeCntStart;
           $scope.measurements.alertDcc = judgeCntDcc;
           $scope.measurements.alertStop = judgeCntStop;
-          $scope.measurements.alertCC = judgeCntCC;
-          $scope.measurements.alertCF = judgeCntCF;
+          // $scope.measurements.alertCC = judgeCntCC;
+          // $scope.measurements.alertCF = judgeCntCF;
           // $scope.measurements.sum = sum3.toFixed(2);
           // $scope.measurements.sumU = sum6.toFixed(2);
           // $scope.measurements.alertL = judgeCnt3L;
@@ -390,8 +420,8 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
       $scope.measurements.alertDcc = judgeCntDcc = obj.dcc = 0;
       $scope.measurements.alertStart = judgeCntStart = obj.start = 0;
       $scope.measurements.alertStop = judgeCntStop = obj.stop = 0;
-      $scope.measurements.alertCC = judgeCntCC = obj.CC = 0;
-      $scope.measurements.alertCF = judgeCntCF = obj.CF = 0;
+      // $scope.measurements.alertCC = judgeCntCC = obj.CC = 0;
+      // $scope.measurements.alertCF = judgeCntCF = obj.CF = 0;
       $scope.measurements.speed = speed = obj.speed = 0;
 
       obj.$save().then(function (ref) {
