@@ -39,6 +39,7 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
   var obj = $firebaseObject(ref2);
   const beta = 0.033;
   const gravity = 9.80665;
+  const speedLimit = 40;
 
 
   // var obj2 = $firebaseObject(ref);
@@ -75,6 +76,10 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
       judgeTimeDcc = 0,
       judgeTimeStart = 0,
       judgeTimeStop = 0,
+      judgeTimeSL = 0,
+      judgeTimeLSL = 0,
+      judgeCntSL = 0,
+      judgeCntLSL = 0,
       judgeCnt3L = 0,
       judgeCnt3R = 0,
       judgeCnt6 = 0,
@@ -82,9 +87,12 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
       judgeCntStart = 0,
       judgeCntDcc = 0,
       judgeCntStop = 0,
+      judgeCntCC = 0,
+      judgeCntCF = 0,
       speed = 0,
       acc = 0,
       angularVel = 0,
+      angularVelFor5 = 0,
       errorAngle3 = errorAngle6 = false;
     var sensorQueue = [];
     var compareQueue = [];
@@ -96,9 +104,7 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
     var rotationErr = [];
     var uturnErr = [];
     var accQueue = [];
-    var speedQueue = [];
     var speedList = [];
-    var angularCompare = [];
     var accList = [];
     const calTime = 6000;
     const secondCnt = (1000 / $scope.options.frequency);
@@ -114,11 +120,7 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
         for (var i = 0; i < MaxQueue; i++)
           compareQueue.push(0);
 
-        for (var i = 0; i < MaxQueue; i++)
-          angularCompare.push(0);
 
-        for (var i = 0; i < secondCnt; i++)
-          speedQueue.push(0);
 
         // Device motion configuration
         $scope.watch = $cordovaDeviceMotion.watchAcceleration($scope.options);
@@ -172,7 +174,6 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
             if (!!accQueue[9]) {
               acc = (accQueue[9] - accQueue[0]) * (3600 / 1000);
               accList.push(acc.toFixed(2));
-              speedQueue.push(acc);
               accQueue.shift();
               obj.accVel = Math.round(acc);
               obj.$save().then(function (ref) {
@@ -188,7 +189,6 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
             if (speed < 0)
               speed = 0;
             speedList.push(speed.toFixed(2));
-            speedQueue.shift();
 
 
             //send speed to the server in realtime
@@ -217,14 +217,14 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
             }
 
 
-            //angularCompare calculate
-            angularCompare.push(compareQueue[MaxQueue - 1] - compareQueue[MaxQueue - 2]);
+            //angularVel calculate
 
-            angularVel = angularCompare.slice(MaxQueue - Math.round(MaxQueue / 6) - 1, MaxQueue - 1).reduce(function (a, b) {
-              return a + b;
-            });
+            angularVel = compareQueue[MaxQueue - 1 - Math.round(MaxQueue * (3 / 6))] - compareQueue[MaxQueue - 1 - Math.round(MaxQueue * (4 / 6))];
 
-            angularCompare.shift();
+            //angularVelFor5 calculate
+
+            angularVelFor5 = compareQueue[MaxQueue - 1] - compareQueue[Math.round(MaxQueue / 6 - 1)];
+
 
 
             //error calculate
@@ -310,7 +310,7 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
               });
             }
             //급출발
-            if (cnt - judgeTimeStart > MaxQueue/3 && speed <= 5 && acc >= 8) {
+            if (cnt - judgeTimeStart > secondCnt && speed <= 5 && acc >= 8) {
               judgeCntStart++;
               judgeTimeStart = cnt;
               obj.start = judgeCntStart;
@@ -334,7 +334,7 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
             }
 
             //급정지
-            if (cnt - judgeTimeStop > MaxQueue/3 && speed <= 5 && acc <= -14) {
+            if (cnt - judgeTimeStop > secondCnt && speed <= 5 && acc <= -14) {
               judgeCntStop++;
               judgeTimeStop = cnt;
               obj.stop = judgeCntStop;
@@ -345,9 +345,48 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
               });
             }
 
-            //급진로변경
-            if (speed >= 30) {
+            //급진로변경 && 급앞지르기
+            if (speed >= 30 && Math.abs(angularVel) >= 10 && Math.abs(angularVelFor5) <= 2) {
+              if (acc <= 2)
+                judgeCntCC++;
 
+              if (acc >= 3)
+                judgeCntCF++;
+
+              obj.CC = judgeCntCC;
+              obj.CF = judgeCntCF;
+              obj.$save().then(function (ref) {
+                ref.key() === obj.$id; // true
+              }, function (error) {
+                console.log("Error:", error);
+              });
+
+            }
+
+            //과속
+
+            if (cnt - judgeTimeSL > secondCnt*3 && speed >= speedLimit){
+              judgeCntSL++;
+              judgeTimeSL = cnt;
+              obj.SL = judgeCntSL;
+              obj.$save().then(function (ref) {
+                ref.key() === obj.$id; // true
+              }, function (error) {
+                console.log("Error:", error);
+              });
+            }
+
+            //장기과속
+
+            if (cnt - judgeTimeLSL > secondCnt*180 && speed >= speedLimit){
+              judgeCntLSL++;
+              judgeTimeLSL = cnt;
+              obj.LSL = judgeCntLSL;
+              obj.$save().then(function (ref) {
+                ref.key() === obj.$id; // true
+              }, function (error) {
+                console.log("Error:", error);
+              });
             }
 
 
@@ -365,6 +404,7 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
 
           }
 
+          //$scope.measurements.test = angularVelFor5.toFixed(2);
           $scope.measurements.acc = acc.toFixed(2);
           $scope.measurements.speed = speed.toFixed(2);
           $scope.measurements.ang = angularVel.toFixed(2);
@@ -373,8 +413,10 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
           $scope.measurements.alertStart = judgeCntStart;
           $scope.measurements.alertDcc = judgeCntDcc;
           $scope.measurements.alertStop = judgeCntStop;
-          // $scope.measurements.alertCC = judgeCntCC;
-          // $scope.measurements.alertCF = judgeCntCF;
+          $scope.measurements.alertCC = judgeCntCC;
+          $scope.measurements.alertCF = judgeCntCF;
+          $scope.measurements.alertSL = judgeCntSL;
+          $scope.measurements.alertLSL = judgeCntLSL;
           // $scope.measurements.sum = sum3.toFixed(2);
           // $scope.measurements.sumU = sum6.toFixed(2);
           // $scope.measurements.alertL = judgeCnt3L;
@@ -420,8 +462,10 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
       $scope.measurements.alertDcc = judgeCntDcc = obj.dcc = 0;
       $scope.measurements.alertStart = judgeCntStart = obj.start = 0;
       $scope.measurements.alertStop = judgeCntStop = obj.stop = 0;
-      // $scope.measurements.alertCC = judgeCntCC = obj.CC = 0;
-      // $scope.measurements.alertCF = judgeCntCF = obj.CF = 0;
+      $scope.measurements.alertCC = judgeCntCC = obj.CC = 0;
+      $scope.measurements.alertCF = judgeCntCF = obj.CF = 0;
+      $scope.measurements.alertSL = judgeCntSL = obj.SL = 0;
+      $scope.measurements.alertLSL = judgeCntLSL = obj.LSL = 0;
       $scope.measurements.speed = speed = obj.speed = 0;
 
       obj.$save().then(function (ref) {
