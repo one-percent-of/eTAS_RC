@@ -39,7 +39,7 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
   var obj = $firebaseObject(ref2);
   const beta = 0.033;
   const gravity = 9.80665;
-  const speedLimit = 40;
+  const speedLimit = 25;
 
 
   // var obj2 = $firebaseObject(ref);
@@ -93,6 +93,7 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
       acc = 0,
       angularVel = 0,
       angularVelFor5 = 0,
+      CntLSL = 0,
       errorAngle3 = errorAngle6 = false;
     var sensorQueue = [];
     var compareQueue = [];
@@ -101,6 +102,14 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
     var rotationCntL = [];
     var rotationCntR = [];
     var uturnCnt = [];
+    var SLCnt = [];
+    var LSLCnt = [];
+    var AccCnt = [];
+    var StartCnt = [];
+    var DccCnt = [];
+    var StopCnt = [];
+    var CCCnt = [];
+    var CFCnt = [];
     var rotationErr = [];
     var uturnErr = [];
     var accQueue = [];
@@ -171,8 +180,8 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
 
 
             //acc calculate
-            if (!!accQueue[9]) {
-              acc = (accQueue[9] - accQueue[0]) * (3600 / 1000);
+            if (!!accQueue[10]) {
+              acc = (accQueue[10] - accQueue[0]) * (3600 / 1000);
               accList.push(acc.toFixed(2));
               accQueue.shift();
               obj.accVel = Math.round(acc);
@@ -346,7 +355,7 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
             }
 
             //급진로변경 && 급앞지르기
-            if (speed >= 30 && Math.abs(angularVel) >= 10 && Math.abs(angularVelFor5) <= 2) {
+            if (speed >= 20 && Math.abs(angularVel) >= 10 && Math.abs(angularVelFor5) <= 2) {
               if (acc <= 2)
                 judgeCntCC++;
 
@@ -364,8 +373,7 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
             }
 
             //과속
-
-            if (cnt - judgeTimeSL > secondCnt*3 && speed >= speedLimit){
+            if (cnt - judgeTimeSL > secondCnt * 3 && speed >= speedLimit) {
               judgeCntSL++;
               judgeTimeSL = cnt;
               obj.SL = judgeCntSL;
@@ -377,25 +385,40 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
             }
 
             //장기과속
+            if (speed >= speedLimit) {
 
-            if (cnt - judgeTimeLSL > secondCnt*180 && speed >= speedLimit){
-              judgeCntLSL++;
-              judgeTimeLSL = cnt;
-              obj.LSL = judgeCntLSL;
-              obj.$save().then(function (ref) {
-                ref.key() === obj.$id; // true
-              }, function (error) {
-                console.log("Error:", error);
-              });
+              CntLSL++;
+
+              if (cnt - judgeTimeLSL > secondCnt * 3 && CntLSL >= secondCnt*20) {
+                judgeCntLSL++;
+                judgeTimeLSL = cnt;
+                obj.LSL = judgeCntLSL;
+                obj.$save().then(function (ref) {
+                  ref.key() === obj.$id; // true
+                }, function (error) {
+                  console.log("Error:", error);
+                });
+              }
+            }
+            else {
+              CntLSL = 0;
             }
 
 
-
+            //데이터 저장
             rotationAng.push(sum3.toFixed(2));
             uturnAng.push(sum6.toFixed(2));
             rotationCntL.push(judgeCnt3L);
             rotationCntR.push(judgeCnt3R);
             uturnCnt.push(judgeCnt6);
+            SLCnt.push(judgeCntSL);
+            LSLCnt.push(judgeCntLSL);
+            AccCnt.push(judgeCntAcc);
+            StartCnt.push(judgeCntStart);
+            DccCnt.push(judgeCntDcc);
+            StopCnt.push(judgeCntStop);
+            CCCnt.push(judgeCntCC);
+            CFCnt.push(judgeCntCF);
             rotationErr.push(errorAngle3);
             uturnErr.push(errorAngle6);
 
@@ -417,11 +440,11 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
           $scope.measurements.alertCF = judgeCntCF;
           $scope.measurements.alertSL = judgeCntSL;
           $scope.measurements.alertLSL = judgeCntLSL;
+          $scope.measurements.alertL = judgeCnt3L;
+          $scope.measurements.alertR = judgeCnt3R;
+          $scope.measurements.alertU = judgeCnt6;
           // $scope.measurements.sum = sum3.toFixed(2);
           // $scope.measurements.sumU = sum6.toFixed(2);
-          // $scope.measurements.alertL = judgeCnt3L;
-          // $scope.measurements.alertR = judgeCnt3R;
-          // $scope.measurements.alertU = judgeCnt6;
           // $scope.measurements.error3 = errorAngle3;
           // $scope.measurements.error6 = errorAngle6;
 
@@ -486,7 +509,15 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
         rotationErr,
         uturnErr,
         speedList,
-        accList
+        accList,
+        SLCnt,
+        LSLCnt,
+        AccCnt,
+        StartCnt,
+        DccCnt,
+        StopCnt,
+        CCCnt,
+        CFCnt
       }
       list.$add(logData).then(function (ref) {
         var id = ref.key();
@@ -503,6 +534,14 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
       uturnErr = [];
       speedList = [];
       accList = [];
+      SLCnt = [];
+      LSLCnt = [];
+      AccCnt = [];
+      StartCnt = [];
+      DccCnt = [];
+      StopCnt = [];
+      CCCnt = [];
+      CFCnt = [];
 
 
 
