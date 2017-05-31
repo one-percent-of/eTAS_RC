@@ -34,7 +34,7 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
   $scope.watch2 = null;
 
 
-  var ref = firebase.database().ref();
+  var ref = firebase.database().ref("record");
   var ref2 = firebase.database().ref("realtime");
   var obj = $firebaseObject(ref2);
   const beta = 0.033;
@@ -237,6 +237,12 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
             //angularVel_cur calculate
             angularVel_cur = compareQueue[MaxQueue - 1] - compareQueue[MaxQueue - 1 - Math.round(MaxQueue * (5 / 6))];
             angularList.push(angularVel_cur.toFixed(2));
+            obj.angularVel = Math.round(angularVel_cur);
+            obj.$save().then(function (ref) {
+              ref.key() === obj.$id; // true
+            }, function (error) {
+              console.log("Error:", error);
+            });
 
 
             //angularVel calculate
@@ -443,7 +449,7 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
           //$scope.measurements.test = angularVelFor5.toFixed(2);
           $scope.measurements.acc = acc.toFixed(2);
           $scope.measurements.speed = speed.toFixed(2);
-          $scope.measurements.ang = angularVel.toFixed(2);
+          $scope.measurements.ang = angularVel_cur.toFixed(2);
           $scope.measurements.cnt = cnt;
           $scope.measurements.alertAcc = judgeCntAcc;
           $scope.measurements.alertStart = judgeCntStart;
