@@ -96,6 +96,7 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
       angularVelFor5 = 0,
       angularVel_cur = 0,
       CntLSL = 0,
+      speedSum = 0,
       errorAngle3 = errorAngle6 = false;
     var sensorQueue = [];
     var compareQueue = [];
@@ -185,9 +186,9 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
             //acc calculate
             if (!!accQueue[10]) {
 
-              
-                acc = acc_cur = (accQueue[10] - accQueue[0]) * (3600 / 1000);
-              
+
+              acc = acc_cur = (accQueue[10] - accQueue[0]) * (3600 / 1000);
+
               // = (accQueue[1]- accQueue[0]) * (3600 / 1000);
               // acc = (accQueue[10] - accQueue[0] + ((accQueue[20] - accQueue[10]) - (accQueue[10] - accQueue[0])) / 2) * (3600 / 1000);
               accList.push(acc_cur.toFixed(2));
@@ -207,6 +208,8 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
 
 
             speedList.push(speed.toFixed(2));
+
+            speedSum += speed / 10;
 
 
             //send speed to the server in realtime
@@ -492,6 +495,10 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
       speed = 0;
       acc = 0;
       angularVel = 0;
+      var dateEnd = new Date();
+      var drivingTime = (Date.parse(dateEnd) - Date.parse(date)) / 1000;
+
+      var distance = (speedSum * (drivingTime / 3600)).toFixed(2);
 
       $scope.watch.clearWatch();
       $scope.watch2.clearWatch();
@@ -521,6 +528,8 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
       let list = $firebaseArray(ref);
       let logData = {
         date,
+        drivingTime,
+        distance,
         rotationAng,
         uturnAng,
         rotationCntL,
