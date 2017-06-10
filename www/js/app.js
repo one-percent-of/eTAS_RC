@@ -78,6 +78,7 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
       judgeTimeStop = 0,
       judgeTimeSL = 0,
       judgeTimeLSL = 0,
+      judgeTimeCC = 0,
       judgeCntSL = 0,
       judgeCntLSL = 0,
       judgeCnt3L = 0,
@@ -209,7 +210,7 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
 
             speedList.push(speed.toFixed(2));
 
-            speedSum += speed / 10;
+            speedSum += speed;
 
 
             //send speed to the server in realtime
@@ -238,7 +239,9 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
             }
 
             //angularVel_cur calculate
-            angularVel_cur = compareQueue[MaxQueue - 1] - compareQueue[MaxQueue - 1 - Math.round(MaxQueue * (5 / 6))];
+            angularVel_cur = compareQueue.slice(Math.round(MaxQueue * (5 / 6)), MaxQueue).reduce(function (a, b) {
+              return a + b;
+            });
             angularList.push(angularVel_cur.toFixed(2));
             obj.angularVel = Math.round(angularVel_cur);
             obj.$save().then(function (ref) {
@@ -250,26 +253,26 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
 
             //angularVel calculate
 
-            angularVel = compareQueue[MaxQueue - 1 - Math.round(MaxQueue * (3 / 6))] - compareQueue[MaxQueue - 1 - Math.round(MaxQueue * (4 / 6))];
-
+            angularVel = compareQueue.slice(Math.round(MaxQueue * (3 / 6)), Math.round(MaxQueue * (4 / 6))).reduce(function (a, b) {
+              return a + b;
+            });
             //angularVelFor5 calculate
 
             angularVelFor5 = compareQueue[MaxQueue - 1] - compareQueue[Math.round(MaxQueue / 6 - 1)];
-
 
 
             //error calculate
             errorAngle3 = errorAngle6 = false;
             for (var i = 0; i <= MaxQueue - Math.round(MaxQueue / 6); i++) {
               if (Math.abs(compareQueue.slice(i, i + Math.round(MaxQueue / 6)).reduce(function (a, b) {
-                return a + b;
-              })) > 60)
+                  return a + b;
+                })) > 60)
                 errorAngle6 = true;
             }
             for (var i = MaxQueue / 2; i <= MaxQueue - Math.round(MaxQueue / 6); i++) {
               if (Math.abs(compareQueue.slice(i, i + Math.round(MaxQueue / 6)).reduce(function (a, b) {
-                return a + b;
-              })) > 60)
+                  return a + b;
+                })) > 60)
                 errorAngle3 = true;
             }
 
@@ -377,7 +380,7 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
             }
 
             //급진로변경 && 급앞지르기
-            if (speed >= 13 && Math.abs(angularVel) >= 10 && Math.abs(angularVelFor5) <= 2) {
+            if (cnt - judgeTimeLSL > secondCnt * 5 && speed >= 13 && Math.abs(angularVel) >= 10 && Math.abs(angularVelFor5) <= 2) {
               if (acc_cur <= 2)
                 judgeCntCC++;
 
@@ -386,6 +389,7 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
 
               obj.CC = judgeCntCC;
               obj.CF = judgeCntCF;
+              judgeTimeCC = cnt;
               obj.$save().then(function (ref) {
                 ref.key() === obj.$id; // true
               }, function (error) {
@@ -421,8 +425,7 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
                   console.log("Error:", error);
                 });
               }
-            }
-            else {
+            } else {
               CntLSL = 0;
             }
 
@@ -498,7 +501,8 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
       var dateEnd = new Date();
       var drivingTime = (Date.parse(dateEnd) - Date.parse(date)) / 1000;
 
-      var distance = (speedSum * (drivingTime / 3600)).toFixed(2);
+      var averageSpeed = (speedSum / (drivingTime * 10)).toFixed(2);
+      var distance = (averageSpeed * (drivingTime / 3600)).toFixed(2);
 
       $scope.watch.clearWatch();
       $scope.watch2.clearWatch();
@@ -530,6 +534,7 @@ app.controller('MotionController', function ($scope, $ionicPlatform, $cordovaDev
         date,
         drivingTime,
         distance,
+        averageSpeed,
         rotationAng,
         uturnAng,
         rotationCntL,
