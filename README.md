@@ -18,4 +18,4 @@
 6. cordova run android
 
 ## Simulation
-[![](http://imgur.com/a/t8Sv6)](https://youtu.be/O_8ZwVq9o3w)
+[![](http://imgur.com/KetaxIb)](https://youtu.be/O_8ZwVq9o3w)
